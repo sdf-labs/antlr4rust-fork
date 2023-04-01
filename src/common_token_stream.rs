@@ -174,7 +174,11 @@ impl<'input, T: TokenSource<'input>> CommonTokenStream<'input, T> {
 
             i += direction;
             self.sync(i);
-            token = self.base.tokens[i as usize].borrow();
+            if i >= 0 {
+                token = self.base.tokens[i as usize].borrow();
+            } else {
+                return i;
+            }
         }
 
         return i;
