@@ -55,6 +55,7 @@ ParserFile(file, parser, namedActions, contextSuperClass) ::= <<
 #![allow(unused_parens)]
 <namedActions.header>
 use antlr_rust::PredictionContextCache;
+use antlr_rust::error_listener::ErrorListener;
 use antlr_rust::parser::{Parser, BaseParser, ParserRecog, ParserNodeType};
 use antlr_rust::token_stream::TokenStream;
 use antlr_rust::TokenSource;
@@ -272,6 +273,13 @@ where
         }
     }
 
+    pub fn add_error_listener(&mut self, listener: Box\<(dyn ErrorListener\<'input, BaseParser\<'input, <parser.name>Ext\<'input>, I, <parser.name>ContextType, (dyn <parser.grammarName>Listener\<'input> + 'input)>\> + 'static)>) {
+        self.base.add_error_listener(listener)
+    }
+
+	pub fn remove_error_listeners(&mut self) {
+        self.base.remove_error_listeners()
+    }
 }
 
 type DynStrategy\<'input,I> = Box\<dyn ErrorStrategy\<'input,BaseParserType\<'input,I>\> + 'input>;
@@ -830,13 +838,22 @@ InvokeRule(r, argExprsChunks) ::= <<
 
 MatchToken(m) ::= <<
 <self()>.base.set_state(<m.stateNumber>);
-<LabelsAssign(m.labels,{<self()>.base.match_token(<m.name>,&mut <self()>.err_handler)?})>
+<LabelsAssignWithBorrowing(m.labels,{<self()>.base.match_token(<m.name>,&mut <self()>.err_handler)?})>
 >>
 
 LabelsAssign(labels,assign) ::= <<
 <if(labels)>
 let tmp = <assign>;
 <labels:{l | <labelref(l,{ = Some(tmp.clone());})> };separator="\n">
+<else>
+<assign>;
+<endif>
+>>
+
+LabelsAssignWithBorrowing(labels,assign) ::= <<
+<if(labels)>
+let tmp = <assign>;
+<labels:{l | <labelref(l,{ = Some(&tmp);})> };separator="\n">
 <else>
 <assign>;
 <endif>
@@ -851,7 +868,7 @@ CommonSetStuff(m, expr, capture, invert) ::= <<
 <if(m.labels)><m.labels:{l | <labelref(l,{ = <self()>.base.input.lt(1).cloned();})>};separator="\n"><endif>
 <capture>
 if { <if(invert)><m.varName> \<= 0 || <else>!<endif>(<expr>) } {
-	<LabelsAssign(m.labels,{<self()>.err_handler.recover_inline(&mut <self()>.base)?})>
+	<LabelsAssignWithBorrowing(m.labels,{<self()>.err_handler.recover_inline(&mut <self()>.base)?})>
 }
 else {
 	if  <self()>.base.input.la(1)==TOKEN_EOF { <self()>.base.matched_eof = true };
