@@ -177,6 +177,7 @@ impl ParserATNSimulator {
             parser,
             pd: PhantomData,
         };
+        // dbg!(&local.outer_context);
         //        4!("adaptive_predict decision {}, is_prec {}",decision,local.dfa.is_precedence_dfa());
 
         let m = local.input().mark();
@@ -954,7 +955,7 @@ impl ParserATNSimulator {
         treat_eofas_epsilon: bool,
         local: &mut Local<'_, 'a, T>,
     ) {
-        //        println!("cl{}", config.get_state());
+        println!("cl{}", config.get_state());
         let initial_depth = 0;
         //        local.merge_cache.clear();
 
@@ -982,6 +983,7 @@ impl ParserATNSimulator {
         treat_eofas_epsilon: bool,
         local: &mut Local<'_, 'a, T>,
     ) {
+        // dbg!("here");
         //        println!("closure({:?})",config);
         if let RuleStopState = self.atn().states[config.get_state()].get_state_type() {
             if !config.get_context().unwrap().is_empty() {
