@@ -830,15 +830,15 @@ cases(ttypes) ::= <<
 InvokeRule(r, argExprsChunks) ::= <<
 /*InvokeRule <r.name>*/
 <self()>.base.set_state(<r.stateNumber>);
-<LabelsAssign(r.labels,{<self()>.<r.name><if(r.ast.options.p)>_rec<endif>(<if(r.ast.options.p)><r.ast.options.p><if(argExprsChunks)>,<endif><endif><argExprsChunks>)?})>
+<LabelsAssignCloned(r.labels,{<self()>.<r.name><if(r.ast.options.p)>_rec<endif>(<if(r.ast.options.p)><r.ast.options.p><if(argExprsChunks)>,<endif><endif><argExprsChunks>)?})>
 >>
 
 MatchToken(m) ::= <<
 <self()>.base.set_state(<m.stateNumber>);
-<LabelsAssignWithBorrowing(m.labels,{<self()>.base.match_token(<m.name>,&mut <self()>.err_handler)?})>
+<LabelsAssignOwned(m.labels,{<self()>.base.match_token(<m.name>,&mut <self()>.err_handler)?})>
 >>
 
-LabelsAssign(labels,assign) ::= <<
+LabelsAssignCloned(labels,assign) ::= <<
 <if(labels)>
 let tmp = <assign>;
 <labels:{l | <labelref(l,{ = Some(tmp.clone());})> };separator="\n">
@@ -847,10 +847,10 @@ let tmp = <assign>;
 <endif>
 >>
 
-LabelsAssignWithBorrowing(labels,assign) ::= <<
+LabelsAssignOwned(labels,assign) ::= <<
 <if(labels)>
 let tmp = <assign>;
-<labels:{l | <labelref(l,{ = Some(&tmp);})> };separator="\n">
+<labels:{l | <labelref(l,{ = Some(tmp);})> };separator="\n">
 <else>
 <assign>;
 <endif>
@@ -865,7 +865,7 @@ CommonSetStuff(m, expr, capture, invert) ::= <<
 <if(m.labels)><m.labels:{l | <labelref(l,{ = <self()>.base.input.lt(1).cloned();})>};separator="\n"><endif>
 <capture>
 if { <if(invert)><m.varName> \<= 0 || <else>!<endif>(<expr>) } {
-	<LabelsAssignWithBorrowing(m.labels,{<self()>.err_handler.recover_inline(&mut <self()>.base)?})>
+	<LabelsAssignOwned(m.labels,{<self()>.err_handler.recover_inline(&mut <self()>.base)?})>
 }
 else {
 	if  <self()>.base.input.la(1)==TOKEN_EOF { <self()>.base.matched_eof = true };
@@ -876,7 +876,7 @@ else {
 
 Wildcard(w) ::= <<
 <self()>.base.set_state(<w.stateNumber>);
-<LabelsAssign(w.labels,{<self()>.base.match_wildcard(&mut <self()>.err_handler)?})>
+<LabelsAssignCloned(w.labels,{<self()>.base.match_wildcard(&mut <self()>.err_handler)?})>
 >>
 
 // ACTION STUFF

@@ -9,7 +9,6 @@
 
 mod gen {
     use std::fmt::Write;
-    use std::io::Read;
     use std::iter::FromIterator;
 
     use antlr_rust::common_token_stream::CommonTokenStream;
@@ -19,10 +18,7 @@ mod gen {
     use antlr_rust::token::{Token, TOKEN_EOF};
     use antlr_rust::token_factory::{ArenaCommonFactory, OwningTokenFactory};
     use antlr_rust::token_stream::{TokenStream, UnbufferedTokenStream};
-    use antlr_rust::tree::{
-        ParseTree, ParseTreeListener, ParseTreeVisitor, ParseTreeVisitorCompat, ParseTreeWalker,
-        TerminalNode, Tree, VisitChildren, Visitable,
-    };
+    use antlr_rust::tree::{ParseTree, ParseTreeListener, TerminalNode};
     use antlr_rust::InputStream;
     use csvlexer::*;
     use csvlistener::*;
@@ -32,10 +28,8 @@ mod gen {
     use referencetoatnparser::ReferenceToATNParser;
     use xmllexer::XMLLexer;
 
-    use crate::gen::csvparser::{
-        CSVParserContext, CSVParserContextType, CsvFileContext, HdrContext, RowContext,
-    };
-    use crate::gen::csvvisitor::CSVVisitor;
+    use crate::gen::csvparser::{CSVParserContext, CSVParserContextType};
+
     use crate::gen::labelslexer::LabelsLexer;
     use crate::gen::labelsparser::{EContextAll, LabelsParser};
     use crate::gen::referencetoatnparser::{

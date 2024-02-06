@@ -76,6 +76,12 @@ pub trait ErrorListener<'a, T: Recognizer<'a>> {
     }
 }
 
+impl<T> Debug for Box<dyn ErrorListener<'_, T>> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Box<dyn ErrorListener>").finish()
+    }
+}
+
 /// Default error listener that outputs errors to stderr
 #[derive(Debug)]
 pub struct ConsoleErrorListener {}

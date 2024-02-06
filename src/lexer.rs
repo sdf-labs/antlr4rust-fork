@@ -116,6 +116,41 @@ pub(crate) struct LexerPosition {
     pub(crate) char_position_in_line: Cell<isize>,
 }
 
+impl<'input, T, Input, TF> core::fmt::Debug for BaseLexer<'input, T, Input, TF>
+where
+    T: LexerRecog<'input, Self> + 'static,
+    Input: CharStream<TF::From>,
+    TF: TokenFactory<'input>,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BaseLexer")
+            .field("interpreter", &self.interpreter)
+            // TODO: fix this
+            // .field("input", &self.input)
+            // .field("recog", &self.recog)
+            // .field("factory", &self.factory)
+            .field("error_listeners", &self.error_listeners)
+            .field("token_start_char_index", &self.token_start_char_index)
+            .field("token_start_line", &self.token_start_line)
+            .field("token_start_column", &self.token_start_column)
+            .field("current_pos", &self.current_pos)
+            .field("token_type", &self.token_type)
+            .field("token", &self.token)
+            .field("hit_eof", &self.hit_eof)
+            .field("channel", &self.channel)
+            .field("mode_stack", &self.mode_stack)
+            .field("mode", &self.mode)
+            .field(
+                "text",
+                match &self.text {
+                    Some(_) => &"Some",
+                    None => &"None",
+                },
+            )
+            .finish()
+    }
+}
+
 impl<'input, T, Input, TF> Deref for BaseLexer<'input, T, Input, TF>
 where
     T: LexerRecog<'input, Self> + 'static,
