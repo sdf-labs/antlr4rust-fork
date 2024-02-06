@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::ops::Deref;
-use std::sync::Arc;
+use std::rc::Rc;
 
 use bit_set::BitSet;
 
@@ -54,7 +54,7 @@ impl LL1Analyzer<'_> {
         //                 atn:&ATN,
         s: &dyn ATNState,
         stop_state: Option<&dyn ATNState>,
-        ctx: Option<Arc<PredictionContext>>,
+        ctx: Option<Rc<PredictionContext>>,
         look: &mut IntervalSet,
         look_busy: &mut HashSet<ATNConfig>,
         called_rule_stack: &mut BitSet,
@@ -90,7 +90,7 @@ impl LL1Analyzer<'_> {
                     look.add_one(TOKEN_EOF);
                     return;
                 }
-                Some(ctx) if &ctx != &*EMPTY_PREDICTION_CONTEXT => {
+                Some(ctx) if EMPTY_PREDICTION_CONTEXT.with(|x| &ctx != &*x) => {
                     let removed = called_rule_stack.contains(s.get_rule_index());
                     called_rule_stack.remove(s.get_rule_index());
                     for i in 0..ctx.length() {
@@ -124,7 +124,7 @@ impl LL1Analyzer<'_> {
                         continue;
                     }
 
-                    let new_ctx = Arc::new(PredictionContext::new_singleton(
+                    let new_ctx = Rc::new(PredictionContext::new_singleton(
                         ctx.clone(),
                         rule_tr.follow_state as isize,
                     ));

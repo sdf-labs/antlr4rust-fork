@@ -12,11 +12,15 @@ fn full_ctx() -> bool {
     false
 }
 
+fn empty_prediction_context() -> Rc<PredictionContext> {
+    EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())
+}
+
 #[test]
 fn test_e_e() {
     let r = PredictionContext::merge(
-        &*EMPTY_PREDICTION_CONTEXT,
-        &*EMPTY_PREDICTION_CONTEXT,
+        &empty_prediction_context(),
+        &empty_prediction_context(),
         root_is_wildcard(),
         &mut None,
     );
@@ -30,8 +34,8 @@ rankdir=LR;
 #[test]
 fn test_e_e_fullctx() {
     let r = PredictionContext::merge(
-        &*EMPTY_PREDICTION_CONTEXT,
-        &*EMPTY_PREDICTION_CONTEXT,
+        &empty_prediction_context(),
+        &empty_prediction_context(),
         full_ctx(),
         &mut None,
     );
@@ -46,7 +50,7 @@ rankdir=LR;
 fn test_x_e() {
     let r = PredictionContext::merge(
         &x(),
-        &*EMPTY_PREDICTION_CONTEXT,
+        &empty_prediction_context(),
         root_is_wildcard(),
         &mut None,
     );
@@ -57,7 +61,7 @@ fn test_x_e() {
 
 #[test]
 fn test_x_e_fullctx() {
-    let r = PredictionContext::merge(&x(), &*EMPTY_PREDICTION_CONTEXT, full_ctx(), &mut None);
+    let r = PredictionContext::merge(&x(), &empty_prediction_context(), full_ctx(), &mut None);
     let expecting = String::new()
         + "digraph G {\n"
         + "rankdir=LR;\n"
@@ -71,7 +75,7 @@ fn test_x_e_fullctx() {
 #[test]
 fn test_e_x() {
     let r = PredictionContext::merge(
-        &*EMPTY_PREDICTION_CONTEXT,
+        &empty_prediction_context(),
         &x(),
         root_is_wildcard(),
         &mut None,
@@ -83,7 +87,7 @@ fn test_e_x() {
 
 #[test]
 fn test_e_x_fullctx() {
-    let r = PredictionContext::merge(&*EMPTY_PREDICTION_CONTEXT, &x(), full_ctx(), &mut None);
+    let r = PredictionContext::merge(&empty_prediction_context(), &x(), full_ctx(), &mut None);
     let expecting = String::new()
         + "digraph G {\n"
         + "rankdir=LR;\n"
@@ -159,7 +163,7 @@ fn test_axe_ae() {
 
 #[test]
 fn test_aae_ae_e_fullctx() {
-    let empty = EMPTY_PREDICTION_CONTEXT.clone();
+    let empty = EMPTY_PREDICTION_CONTEXT.with(|x| x.clone());
     let child1 = PredictionContext::new_singleton(Some(empty.clone()), 8).alloc();
     let right = PredictionContext::merge(&empty, &child1, false, &mut None);
     let left = PredictionContext::new_singleton(Some(right.clone()), 8).alloc();
@@ -390,8 +394,8 @@ fn test_aex_bfx() {
 
 #[test]
 fn test_Ae_Ae_fullctx() {
-    let A1 = array(vec![EMPTY_PREDICTION_CONTEXT.clone()]);
-    let A2 = array(vec![EMPTY_PREDICTION_CONTEXT.clone()]);
+    let A1 = array(vec![EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())]);
+    let A2 = array(vec![EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())]);
     let r = PredictionContext::merge(&A1, &A2, full_ctx(), &mut None);
     let expecting =
         String::new() + "digraph G {\n" + "rankdir=LR;\n" + "  s0[label=\"$\"];\n" + "}\n";
@@ -694,7 +698,7 @@ fn test_Aaubu_Acudu() {
     assert_eq!(expecting, to_dot_string(r, root_is_wildcard()))
 }
 
-fn array(nodes: Vec<Arc<PredictionContext>>) -> Arc<PredictionContext> {
+fn array(nodes: Vec<Rc<PredictionContext>>) -> Rc<PredictionContext> {
     let mut parents = Vec::with_capacity(nodes.len());
     let mut invoking_states = Vec::with_capacity(nodes.len());
     for node in nodes {
@@ -705,48 +709,48 @@ fn array(nodes: Vec<Arc<PredictionContext>>) -> Arc<PredictionContext> {
     PredictionContext::new_array(parents, invoking_states).alloc()
 }
 
-fn y() -> Arc<PredictionContext> {
-    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.clone()), 10).alloc()
+fn y() -> Rc<PredictionContext> {
+    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())), 10).alloc()
 }
 
-fn x() -> Arc<PredictionContext> {
-    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.clone()), 9).alloc()
+fn x() -> Rc<PredictionContext> {
+    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())), 9).alloc()
 }
 
-fn w() -> Arc<PredictionContext> {
-    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.clone()), 8).alloc()
+fn w() -> Rc<PredictionContext> {
+    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())), 8).alloc()
 }
 
-fn v() -> Arc<PredictionContext> {
-    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.clone()), 7).alloc()
+fn v() -> Rc<PredictionContext> {
+    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())), 7).alloc()
 }
 
-fn u() -> Arc<PredictionContext> {
-    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.clone()), 6).alloc()
+fn u() -> Rc<PredictionContext> {
+    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())), 6).alloc()
 }
 
-fn d() -> Arc<PredictionContext> {
-    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.clone()), 4).alloc()
+fn d() -> Rc<PredictionContext> {
+    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())), 4).alloc()
 }
 
-fn c() -> Arc<PredictionContext> {
-    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.clone()), 3).alloc()
+fn c() -> Rc<PredictionContext> {
+    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())), 3).alloc()
 }
 
-fn b() -> Arc<PredictionContext> {
-    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.clone()), 2).alloc()
+fn b() -> Rc<PredictionContext> {
+    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())), 2).alloc()
 }
 
-fn a() -> Arc<PredictionContext> {
-    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.clone()), 1).alloc()
+fn a() -> Rc<PredictionContext> {
+    PredictionContext::new_singleton(Some(EMPTY_PREDICTION_CONTEXT.with(|x| x.clone())), 1).alloc()
 }
 
-fn to_dot_string(context: Arc<PredictionContext>, is_root_wildcard: bool) -> String {
+fn to_dot_string(context: Rc<PredictionContext>, is_root_wildcard: bool) -> String {
     let mut nodes = String::new();
     let mut edges = String::new();
-    let mut visited = HashMap::<*const PredictionContext, Arc<PredictionContext>>::new();
+    let mut visited = HashMap::<*const PredictionContext, Rc<PredictionContext>>::new();
     let mut context_ids = HashMap::<*const PredictionContext, usize>::new();
-    let mut work_list = VecDeque::<Arc<PredictionContext>>::new();
+    let mut work_list = VecDeque::<Rc<PredictionContext>>::new();
     visited.insert(context.deref(), context.clone());
     context_ids.insert(context.deref(), context_ids.len());
     work_list.push_back(context);

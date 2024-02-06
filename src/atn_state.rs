@@ -246,7 +246,7 @@ impl ATNState for BaseATNState {
 //        self.base.set_next_token_within_rule(v)
 //    }
 //
-//    fn get_atn(&self) -> Arc<ATN> {
+//    fn get_atn(&self) -> Rc<ATN> {
 //        self.base.get_atn()
 //    }
 //
@@ -336,7 +336,7 @@ impl ATNState for BaseATNState {
 //        self.base.set_next_token_within_rule(v)
 //    }
 //
-//    fn get_atn(&self) -> Arc<ATN> {
+//    fn get_atn(&self) -> Rc<ATN> {
 //        self.base.get_atn()
 //    }
 //

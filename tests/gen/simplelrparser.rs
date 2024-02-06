@@ -35,7 +35,6 @@ use std::convert::TryFrom;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
-use std::sync::Arc;
 
 pub const ID: isize = 1;
 pub const WS: isize = 2;
@@ -45,10 +44,10 @@ pub const ruleNames: [&'static str; 2] = ["s", "a"];
 
 pub const _LITERAL_NAMES: [Option<&'static str>; 0] = [];
 pub const _SYMBOLIC_NAMES: [Option<&'static str>; 3] = [None, Some("ID"), Some("WS")];
-lazy_static! {
-    static ref _shared_context_cache: Arc<PredictionContextCache> =
-        Arc::new(PredictionContextCache::new());
-    static ref VOCABULARY: Box<dyn Vocabulary> = Box::new(VocabularyImpl::new(
+thread_local! {
+    static _shared_context_cache: Rc<PredictionContextCache> =
+        Rc::new(PredictionContextCache::new());
+    static VOCABULARY: Box<dyn Vocabulary> = Box::new(VocabularyImpl::new(
         _LITERAL_NAMES.iter(),
         _SYMBOLIC_NAMES.iter(),
         None
@@ -76,7 +75,7 @@ where
     H: ErrorStrategy<'input, BaseParserType<'input, I>>,
 {
     base: BaseParserType<'input, I>,
-    interpreter: Arc<ParserATNSimulator>,
+    interpreter: Rc<ParserATNSimulator>,
     _shared_context_cache: Box<PredictionContextCache>,
     pub err_handler: H,
 }
@@ -96,15 +95,15 @@ where
 
     pub fn with_strategy(input: I, strategy: H) -> Self {
         antlr_rust::recognizer::check_version("0", "3");
-        let interpreter = Arc::new(ParserATNSimulator::new(
-            _ATN.clone(),
-            _decision_to_DFA.clone(),
-            _shared_context_cache.clone(),
+        let interpreter = Rc::new(ParserATNSimulator::new(
+            _ATN.with(|atn| atn.clone()),
+            _decision_to_DFA.with(|decision| decision.clone()),
+            _shared_context_cache.with(|ctx| ctx.clone()),
         ));
         Self {
             base: BaseParser::new_base_parser(
                 input,
-                Arc::clone(&interpreter),
+                Rc::clone(&interpreter),
                 SimpleLRParserExt {
                     _pd: Default::default(),
                 },
@@ -210,7 +209,7 @@ impl<'input, I: TokenStream<'input, TF = LocalTokenFactory<'input>> + TidAble<'i
     }
 
     fn get_vocabulary(&self) -> &dyn Vocabulary {
-        &**VOCABULARY
+        VOCABULARY.with(|v| unsafe { std::mem::transmute(&**v) })
     }
     fn sempred(
         _localctx: Option<&(dyn SimpleLRParserContext<'input> + 'input)>,
@@ -488,16 +487,17 @@ where
     }
 }
 
-lazy_static! {
-    static ref _ATN: Arc<ATN> =
-        Arc::new(ATNDeserializer::new(None).deserialize(_serializedATN.chars()));
-    static ref _decision_to_DFA: Arc<Vec<antlr_rust::RwLock<DFA>>> = {
+thread_local! {
+    static _ATN: Rc<ATN> =
+        Rc::new(ATNDeserializer::new(None).deserialize(_serializedATN.chars()));
+    static _decision_to_DFA: Rc<Vec<RefCell<DFA>>> = {
         let mut dfa = Vec::new();
-        let size = _ATN.decision_to_state.len();
+        let size = _ATN.with(|atn| atn.decision_to_state.len());
         for i in 0..size {
-            dfa.push(DFA::new(_ATN.clone(), _ATN.get_decision_state(i), i as isize).into())
+            dfa.push(DFA::new(_ATN.with(|atn| atn.clone()), _ATN.with(|atn| atn
+            .get_decision_state(i)), i as isize).into())
         }
-        Arc::new(dfa)
+        Rc::new(dfa)
     };
 }
 

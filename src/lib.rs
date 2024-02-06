@@ -12,7 +12,7 @@
 // #![feature(crate_visibility_modifier)]
 // #![feature(generic_associated_types)]
 #![warn(rust_2018_idioms)]
-#![warn(missing_docs)] // warn if there is missing docs
+//#![warn(missing_docs)] // warn if there is missing docs
 #![warn(missing_debug_implementations)]
 #![warn(trivial_numeric_casts)]
 // #![allow(incomplete_features)]
@@ -91,8 +91,6 @@ extern crate lazy_static;
 pub use lazy_static::lazy_static;
 
 #[doc(hidden)]
-pub use parking_lot::RwLock;
-
 #[doc(hidden)]
 pub use better_any::{tid, Tid, TidAble, TidExt};
 

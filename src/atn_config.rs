@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Error, Formatter};
 use std::hash::{Hash, Hasher};
-use std::sync::Arc;
+use std::rc::Rc;
 
 use murmur3::murmur3_32::MurmurHasher;
 
@@ -20,7 +20,7 @@ pub struct ATNConfig {
     alt: isize,
     //todo maybe option is unnecessary and PredictionContext::EMPTY would be enough
     //another todo check arena alloc
-    context: Option<Arc<PredictionContext>>,
+    context: Option<Rc<PredictionContext>>,
     pub semantic_context: Box<SemanticContext>,
     pub reaches_into_outer_context: isize,
     pub(crate) config_type: ATNConfigType,
@@ -32,7 +32,7 @@ impl PartialEq for ATNConfig {
     fn eq(&self, other: &Self) -> bool {
         self.get_state() == other.get_state()
             && self.get_alt() == other.get_alt()
-            // Arc is optimized to not do a deep equalitiy if arc pointers are equal so that's enough
+            // Rc is optimized to not do a deep equalitiy if arc pointers are equal so that's enough
             && self.context == other.context
             && self.get_type() == other.get_type()
             && self.semantic_context == other.semantic_context
@@ -113,7 +113,7 @@ impl ATNConfig {
     pub fn new(
         state: ATNStateRef,
         alt: isize,
-        context: Option<Arc<PredictionContext>>,
+        context: Option<Rc<PredictionContext>>,
     ) -> ATNConfig {
         ATNConfig {
             precedence_filter_suppressed: false,
@@ -129,7 +129,7 @@ impl ATNConfig {
     pub fn new_with_semantic(
         state: ATNStateRef,
         alt: isize,
-        context: Option<Arc<PredictionContext>>,
+        context: Option<Rc<PredictionContext>>,
         semantic_context: Box<SemanticContext>,
     ) -> ATNConfig {
         let mut new = Self::new(state, alt, context);
@@ -140,7 +140,7 @@ impl ATNConfig {
     pub fn new_lexer_atnconfig6(
         _state: ATNStateRef,
         _alt: isize,
-        _context: Arc<PredictionContext>,
+        _context: Rc<PredictionContext>,
     ) -> ATNConfig {
         let mut atnconfig = ATNConfig::new(_state, _alt, Some(_context));
         atnconfig.config_type = ATNConfigType::LexerATNConfig {
@@ -177,7 +177,7 @@ impl ATNConfig {
     pub fn cloned_with_new_ctx(
         &self,
         target: &dyn ATNState,
-        ctx: Option<Arc<PredictionContext>>,
+        ctx: Option<Rc<PredictionContext>>,
     ) -> ATNConfig {
         let mut new = self.cloned(target);
         new.context = ctx;
@@ -214,15 +214,15 @@ impl ATNConfig {
         &self.config_type
     }
 
-    pub fn get_context(&self) -> Option<&Arc<PredictionContext>> {
+    pub fn get_context(&self) -> Option<&Rc<PredictionContext>> {
         self.context.as_ref()
     }
 
-    pub fn take_context(&mut self) -> Arc<PredictionContext> {
+    pub fn take_context(&mut self) -> Rc<PredictionContext> {
         self.context.take().unwrap()
     }
 
-    pub fn set_context(&mut self, _v: Arc<PredictionContext>) {
+    pub fn set_context(&mut self, _v: Rc<PredictionContext>) {
         self.context = Some(_v);
     }
 

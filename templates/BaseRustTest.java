@@ -709,7 +709,7 @@ public class BaseRustTest implements RuntimeTestSupport {
 				(showDFA ?
 						"print!(\"{}\",_lexer.get_interpreter().unwrap()" +
 								".get_dfa_for_mode(antlr_rust::lexer::LEXER_DEFAULT_MODE)" +
-								".read().to_lexer_string());\n"
+                                ".borrow().to_lexer_string());\n"
 						: "") +
 				"	Ok(())" +
 				"}\n"

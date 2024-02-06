@@ -220,13 +220,13 @@ impl<T: Borrow<str> + Debug> Token for GenericToken<T> {
 
 impl Default for &'_ OwningToken {
     fn default() -> Self {
-        &**INVALID_OWNING
+        INVALID_OWNING.with(|x| unsafe { std::mem::transmute(&**x) })
     }
 }
 
 impl Default for &'_ CommonToken<'_> {
     fn default() -> Self {
-        &**INVALID_COMMON
+        INVALID_COMMON.with(|x| unsafe { std::mem::transmute(&**x) })
     }
 }
 

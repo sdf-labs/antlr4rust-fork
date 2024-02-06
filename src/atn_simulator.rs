@@ -1,22 +1,22 @@
+use std::cell::RefCell;
 use std::fmt::{Debug, Error, Formatter};
 use std::ops::Deref;
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::atn::ATN;
 use crate::dfa::DFA;
 use crate::prediction_context::PredictionContextCache;
-use parking_lot::RwLock;
 
 pub trait IATNSimulator {
     fn shared_context_cache(&self) -> &PredictionContextCache;
     fn atn(&self) -> &ATN;
-    fn decision_to_dfa(&self) -> &Vec<RwLock<DFA>>;
+    fn decision_to_dfa(&self) -> &Vec<RefCell<DFA>>;
 }
 
 pub struct BaseATNSimulator {
-    pub atn: Arc<ATN>,
-    pub shared_context_cache: Arc<PredictionContextCache>,
-    pub decision_to_dfa: Arc<Vec<RwLock<DFA>>>,
+    pub atn: Rc<ATN>,
+    pub shared_context_cache: Rc<PredictionContextCache>,
+    pub decision_to_dfa: Rc<Vec<RefCell<DFA>>>,
 }
 
 impl Debug for BaseATNSimulator {
@@ -27,9 +27,9 @@ impl Debug for BaseATNSimulator {
 
 impl BaseATNSimulator {
     pub fn new_base_atnsimulator(
-        atn: Arc<ATN>,
-        decision_to_dfa: Arc<Vec<RwLock<DFA>>>,
-        shared_context_cache: Arc<PredictionContextCache>,
+        atn: Rc<ATN>,
+        decision_to_dfa: Rc<Vec<RefCell<DFA>>>,
+        shared_context_cache: Rc<PredictionContextCache>,
     ) -> BaseATNSimulator {
         BaseATNSimulator {
             atn,
@@ -48,7 +48,7 @@ impl IATNSimulator for BaseATNSimulator {
         self.atn.as_ref()
     }
 
-    fn decision_to_dfa(&self) -> &Vec<RwLock<DFA>> {
+    fn decision_to_dfa(&self) -> &Vec<RefCell<DFA>> {
         self.decision_to_dfa.as_ref()
     }
 }

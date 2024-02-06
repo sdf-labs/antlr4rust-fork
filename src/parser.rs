@@ -4,7 +4,6 @@ use std::cell::{Cell, RefCell};
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
-use std::sync::Arc;
 
 use crate::atn::ATN;
 use crate::atn_simulator::IATNSimulator;
@@ -23,7 +22,7 @@ use crate::tree::{ErrorNode, Listenable, ParseTreeListener, TerminalNode};
 use crate::utils::cell_update;
 use crate::vocabulary::Vocabulary;
 use crate::{CoerceFrom, CoerceTo};
-use better_any::{Tid, TidAble};
+use better_any::TidAble;
 
 /// parser functionality required for `ParserATNSimulator` to work
 #[allow(missing_docs)] // todo rewrite it so downstream crates actually could meaningfully implement it
@@ -113,7 +112,7 @@ pub struct BaseParser<
     Ctx: ParserNodeType<'input, TF = I::TF>, // Ctx::Type is trait object type for tree node of the parser
     T: ParseTreeListener<'input, Ctx> + ?Sized = dyn ParseTreeListener<'input, Ctx>,
 > {
-    interp: Arc<ParserATNSimulator>,
+    interp: Rc<ParserATNSimulator>,
     /// Rule context parser is currently processing
     pub ctx: Option<Rc<Ctx::Type>>,
 
@@ -400,7 +399,7 @@ where
     //     TerminalNode<'input, Ctx>: CoerceTo<Ctx::Type>,
     //     ErrorNode<'input, Ctx>: CoerceTo<Ctx::Type>,
 {
-    pub fn new_base_parser(input: I, interpreter: Arc<ParserATNSimulator>, ext: Ext) -> Self {
+    pub fn new_base_parser(input: I, interpreter: Rc<ParserATNSimulator>, ext: Ext) -> Self {
         Self {
             interp: interpreter,
             ctx: None,
@@ -665,7 +664,7 @@ where
     pub fn dump_dfa(&self) {
         let mut seen_one = false;
         for dfa in self.interp.decision_to_dfa() {
-            let dfa = dfa.read();
+            let dfa = dfa.borrow();
             // because s0 is saved in dfa for Rust version
             if dfa.states.len() > 1 + (dfa.is_precedence_dfa() as usize) {
                 if seen_one {

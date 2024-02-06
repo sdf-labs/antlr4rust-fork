@@ -26,7 +26,6 @@ use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
-use std::sync::Arc;
 
 pub const T__0: isize = 1;
 pub const T__1: isize = 2;
@@ -66,10 +65,10 @@ pub const _SYMBOLIC_NAMES: [Option<&'static str>; 10] = [
     Some("INT"),
     Some("WS"),
 ];
-lazy_static! {
-    static ref _shared_context_cache: Arc<PredictionContextCache> =
-        Arc::new(PredictionContextCache::new());
-    static ref VOCABULARY: Box<dyn Vocabulary> = Box::new(VocabularyImpl::new(
+thread_local! {
+    static _shared_context_cache: Rc<PredictionContextCache> =
+        Rc::new(PredictionContextCache::new());
+    static VOCABULARY: Box<dyn Vocabulary> = Box::new(VocabularyImpl::new(
         _LITERAL_NAMES.iter(),
         _SYMBOLIC_NAMES.iter(),
         None
@@ -124,9 +123,9 @@ impl<'input, Input: CharStream<From<'input>>> LabelsLexer<'input, Input> {
             base: BaseLexer::new_base_lexer(
                 input,
                 LexerATNSimulator::new_lexer_atnsimulator(
-                    _ATN.clone(),
-                    _decision_to_DFA.clone(),
-                    _shared_context_cache.clone(),
+                    _ATN.with(|atn| atn.clone()),
+                    _decision_to_DFA.with(|decision| decision.clone()),
+                    _shared_context_cache.with(|ctx| ctx.clone()),
                 ),
                 LabelsLexerActions {},
                 tf,
@@ -196,16 +195,17 @@ impl<'input, Input: CharStream<From<'input>>> TokenSource<'input> for LabelsLexe
     }
 }
 
-lazy_static! {
-    static ref _ATN: Arc<ATN> =
-        Arc::new(ATNDeserializer::new(None).deserialize(_serializedATN.chars()));
-    static ref _decision_to_DFA: Arc<Vec<antlr_rust::RwLock<DFA>>> = {
+thread_local! {
+    static _ATN: Rc<ATN> =
+        Rc::new(ATNDeserializer::new(None).deserialize(_serializedATN.chars()));
+    static _decision_to_DFA: Rc<Vec<RefCell<DFA>>> = {
         let mut dfa = Vec::new();
-        let size = _ATN.decision_to_state.len();
+        let size = _ATN.with(|atn| atn.decision_to_state.len());
         for i in 0..size {
-            dfa.push(DFA::new(_ATN.clone(), _ATN.get_decision_state(i), i as isize).into())
+            dfa.push(DFA::new(_ATN.with(|atn| atn.clone()), _ATN.with(|atn| atn
+            .get_decision_state(i)), i as isize).into())
         }
-        Arc::new(dfa)
+        Rc::new(dfa)
     };
 }
 

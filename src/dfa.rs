@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::convert::TryFrom;
 
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::atn::ATN;
 use crate::atn_config_set::ATNConfigSet;
@@ -56,12 +56,12 @@ pub struct DFA {
 }
 
 impl DFA {
-    pub fn new(atn: Arc<ATN>, atn_start_state: ATNStateRef, decision: isize) -> DFA {
+    pub fn new(atn: Rc<ATN>, atn_start_state: ATNStateRef, decision: isize) -> DFA {
         let mut dfa = DFA {
             atn_start_state,
             decision,
             states: Default::default(),
-            //            states_map: RwLock::new(HashMap::new()),
+            //            states_map: RefCell::new(HashMap::new()),
             states_map: Default::default(),
             s0: Default::default(),
             is_precedence_dfa: false,

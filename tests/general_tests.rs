@@ -112,7 +112,7 @@ if (x < x && a > 0) then duh
                 .get_interpreter()
                 .unwrap()
                 .get_dfa()
-                .read()
+                .borrow()
                 .to_lexer_string()
         );
         Ok(())
